@@ -14,7 +14,7 @@ from ciphers.transposition import columnar_transposition_encrypt, columnar_trans
 from ciphers.DES import des_encrypt, des_decrypt
 from ciphers.RSAComponent import RSACipher
 from ciphers.RC4Cipher import RC4Cipher
-
+from ciphers.AESCipher import AESCipher
 
 class RC4Cipher:
     def _rc4_transform(self, data: bytes, key: bytes) -> bytes:
@@ -96,6 +96,7 @@ PATTERNS = {
     "rsa": "<svg width='120' height='75'><g stroke='rgba(255,255,255,0.3)' stroke-width='3' fill='none'><rect x='22' y='32' width='32' height='26' rx='6' fill='rgba(255,255,255,0.12)'/><path d='M29 32 V21 a9 9 0 0 1 18 0 V32'/></g><g stroke='rgba(255,255,255,0.16)' stroke-width='2.5' fill='none'><rect x='72' y='48' width='22' height='17' rx='4'/><path d='M77 48 V40 a6 6 0 0 1 12 0 V48'/></g><circle cx='38' cy='45' r='3' fill='rgba(255,255,255,0.5)'/></svg>",
     "rc4": "<svg width='120' height='75'><path d='M54 4 L32 40 H47 L40 71 L80 26 H61 L72 4 Z' fill='rgba(255,255,255,0.22)'/><path d='M12 60 H26 M16 48 H28' stroke='rgba(255,255,255,0.32)' stroke-width='2.5' stroke-linecap='round'/><path d='M96 58 H108' stroke='rgba(255,255,255,0.25)' stroke-width='2.5' stroke-linecap='round'/></svg>",
     "des": "<svg width='150' height='75'><rect x='8' y='10' width='24' height='15' rx='3' fill='rgba(255,255,255,0.18)'/><rect x='8' y='48' width='24' height='15' rx='3' fill='rgba(255,255,255,0.18)'/><rect x='66' y='10' width='24' height='15' rx='3' fill='none' stroke='rgba(255,255,255,0.32)' stroke-width='2.5'/><rect x='66' y='48' width='24' height='15' rx='3' fill='none' stroke='rgba(255,255,255,0.26)' stroke-width='2.5'/><path d='M32 17 H66 M32 55 H66 M90 17 H116 V55 H90' stroke='rgba(255,255,255,0.24)' stroke-width='2' fill='none'/><circle cx='132' cy='36' r='5.5' fill='rgba(255,255,255,0.32)'/></svg>",
+    "aes": "<svg width='140' height='75'><rect x='20' y='25' width='100' height='25' rx='4' fill='rgba(255,255,255,0.15)'/><path d='M30 25 V15 A 40 40 0 0 1 110 15 V25' stroke='rgba(255,255,255,0.3)' stroke-width='3' fill='none'/><circle cx='70' cy='37' r='4' fill='rgba(255,255,255,0.6)'/></svg>",
 }
 
 # ============================================================
@@ -166,12 +167,19 @@ ALGOS = {
         steps=["أدخل نصًا ومفتاحًا من 8 أحرف", "شغّل التشفير (Hex)", "فُك بالنص Hex والمفتاح نفسه"],
         story="طوّرته IBM باسم Lucifer واعتمدته NIST معيارًا فيدراليًا عام 1977. قِصَر مفتاحه (56-بت) جعله قابلًا للكسر بالحواسيب الحديثة فخلفه AES — لكنه يبقى من أهم دروس علم التشفير.",
         tags=["🧊 شبكة فيستل", "📖 معلم أساسي"]),
+    "aes": dict(icon="🛡️", name="معيار التشفير المتقدم (AES)", en="AES-256-GCM", badge="حديث · الأقوى عالمياً",
+        desc="خوارزمية التشفير المتماثل الأقوى والمعتمدة عالمياً (تشفير البنوك والحكومات)، تدعم التوثيق عبر (GCM) لمنع التلاعب بالبيانات.",
+        c1="#ff0055", c2="#2b00ff",
+        meta=["🧩 متماثل كتلي (Block)", "🕰️ 2001 · NIST", "🛡️ غير قابل للكسر", "🌐 HTTPS / VPN"],
+        steps=["أدخل أي كلمة مرور قوية", "اختر نصًا أو ملفًا ضخماً", "نفّذ التشفير بأعلى حماية"],
+        story="تم اختيار AES كبديل لخوارزمية DES بعد مسابقة عالمية. نستخدم هنا وضع GCM الذي يوفر سرية البيانات ويثبت مصداقيتها في نفس الوقت.",
+        tags=["🛡️ درع سيبراني", "🚀 فائق القوة"]),
 }
 
-ORDER = ["binary", "caesar", "multiplicative", "additive", "columnar", "pbox", "rsa", "rc4", "des"]
+ORDER = ["binary", "caesar", "multiplicative", "additive", "columnar", "pbox", "rsa", "rc4", "des", "aes"]
 ALGO_CAT = {"binary": "modern", "caesar": "classical", "multiplicative": "classical",
             "additive": "classical", "columnar": "classical", "pbox": "modern",
-            "rsa": "modern", "rc4": "modern", "des": "modern"}
+            "rsa": "modern", "rc4": "modern", "des": "modern", "aes": "modern"}
 
 NAV = {
     "home": "🏠 الصفحة الرئيسية",
@@ -184,6 +192,7 @@ NAV = {
     "rsa": "🔐 خوارزمية RSA",
     "rc4": "⚡ التشفير السريع · RC4",
     "des": "🗝️ خوارزمية DES",
+    "aes": "🛡️ خوارزمية AES"
 }
 LABEL2KEY = {v: k for k, v in NAV.items()}
 
@@ -857,7 +866,83 @@ def page_rsa():
                 except Exception as e:
                     st.error(f"❌ خطأ في فك التشفير: {str(e)}")
     back_home("rsa")
+def page_aes():
+    algo_header("aes", "تشفير <b>عسكري</b>: يمكنك استخدام أي كلمة مرور (تشفير متماثل). النظام يشتق منها مفتاحاً قوياً جداً بـ 256-بت باستخدام دالة SCrypt لتوفير أقصى درجات الحماية ضد هجمات كسر كلمات المرور.")
+    aes_tool = AESCipher()
+    
+    tab1, tab2 = st.tabs(["🔒 التشفير (Encrypt) - أعلى حماية", "🔓 فك التشفير (Decrypt)"])
+    with tab1:
+        with st.container(border=True):
+            st.subheader("تشفير AES-GCM (التشفير والتوثيق)")
+            aes_password = st.text_input("أدخل كلمة المرور للتشفير:", type="password", key="aes_enc_pass")
+            aes_input_type = st.radio("ماذا تريد أن تشفر؟", ["نص (Text)", "ملف (File)"], key="aes_enc_type", horizontal=True)
+            
+            if aes_input_type == "نص (Text)":
+                text_to_enc = st.text_area("أدخل النص (يدعم نصوصاً طويلة جداً):", key="aes_enc_text")
+                if st.button("🛡️ تشفير النص فوراً", key="aes_enc_btn_txt", use_container_width=True):
+                    if not aes_password.strip():
+                        st.warning("⚠️ يجب إدخال كلمة مرور.")
+                    elif not text_to_enc.strip():
+                        st.warning("⚠️ يجب إدخال النص.")
+                    else:
+                        try:
+                            result = aes_tool.encrypt_text(text_to_enc, aes_password)
+                            st.success("✨ تمت حماية النص بنجاح!")
+                            st.code(result, language="text")
+                        except Exception as e:
+                            st.error(str(e))
+            else:
+                file_to_enc = st.file_uploader("اختر ملفاً (صور، PDF، مستندات):", key="aes_enc_file")
+                if st.button("🛡️ تشفير وحماية الملف", key="aes_enc_btn_file", use_container_width=True):
+                    if not aes_password.strip():
+                        st.warning("⚠️ يجب إدخال كلمة مرور.")
+                    elif file_to_enc is None:
+                        st.warning("⚠️ يرجى رفع ملف.")
+                    else:
+                        try:
+                            enc_bytes = aes_tool.encrypt_bytes(file_to_enc.read(), aes_password)
+                            st.success("✨ تم تشفير الملف. لا يمكن فتحه الآن إلا بكلمة المرور.")
+                            st.download_button("📥 تحميل الملف المشفر", data=enc_bytes, file_name="secured_file.aes", mime="application/octet-stream")
+                        except Exception as e:
+                            st.error(str(e))
 
+    with tab2:
+        with st.container(border=True):
+            st.subheader("فك التشفير (يحتاج كلمة المرور الأصلية)")
+            aes_password_dec = st.text_input("أدخل كلمة المرور الأصلية:", type="password", key="aes_dec_pass")
+            aes_dec_type = st.radio("ماذا تريد أن تفك تشفيره؟", ["نص مشفر", "ملف مشفر (.aes)"], key="aes_dec_type", horizontal=True)
+            
+            if aes_dec_type == "نص مشفر":
+                text_to_dec = st.text_area("الصق النص المشفر هنا:", key="aes_dec_text")
+                if st.button("🔓 فك التشفير", key="aes_dec_btn_txt", use_container_width=True):
+                    if not aes_password_dec.strip():
+                         st.warning("⚠️ يرجى إدخال كلمة المرور.")
+                    elif not text_to_dec.strip():
+                         st.warning("⚠️ يرجى إدخال النص المشفر.")
+                    else:
+                        try:
+                            result = aes_tool.decrypt_text(text_to_dec.strip(), aes_password_dec)
+                            st.success("✨ تم فك التشفير واستعادة النص بنجاح!")
+                            st.code(result, language="text")
+                        except Exception as e:
+                            st.error(str(e))
+            else:
+                file_to_dec = st.file_uploader("ارفع الملف المشفر:", key="aes_dec_file")
+                file_name_out = st.text_input("صيغة واسم الملف المسترجع (مثال: image.jpg):", value="decrypted_file.txt")
+                if st.button("🔓 استرجاع الملف", key="aes_dec_btn_file", use_container_width=True):
+                    if not aes_password_dec.strip():
+                         st.warning("⚠️ يرجى إدخال كلمة المرور.")
+                    elif file_to_dec is None:
+                         st.warning("⚠️ يرجى رفع الملف المشفر.")
+                    else:
+                        try:
+                            dec_bytes = aes_tool.decrypt_bytes(file_to_dec.read(), aes_password_dec)
+                            st.success("✨ تم فك تشفير واسترجاع الملف بنجاح!")
+                            st.download_button("📥 تحميل الملف المسترجع", data=dec_bytes, file_name=file_name_out, mime="application/octet-stream")
+                        except Exception as e:
+                            st.error(str(e))
+
+    back_home("aes")
 
 def page_rc4():
     algo_header("rc4", "شفرة <b>سيلانية</b>: المفتاح السري نفسه يُستخدم للتشفير والفك — الناتج النصي بصيغة Base64، والملفات تُشفّر بايت ببايت.")
@@ -984,6 +1069,7 @@ html("<div class='cm-sb-foot'>CryptoMatrix · NeoGlass v2.1<br/>جميع الع�
 PAGES = {
     "binary": page_binary, "caesar": page_caesar, "multiplicative": page_multiplicative,
     "additive": page_additive, "columnar": page_columnar, "pbox": page_pbox,
+    "aes": page_aes, # ← أضف هذا السطر هنا
     "rsa": page_rsa, "rc4": page_rc4, "des": page_des,
 }
 
